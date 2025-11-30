@@ -1,0 +1,17 @@
+{
+  "product-service": {
+    "url": "http://127.0.0.1:3002",
+    "version": "1.0.0",
+    "database": "JSON-NoSQL",
+    "endpoints": [
+      "/health",
+      "/products",
+      "/categories",
+      "/search"
+    ],
+    "registeredAt": 1764244249491,
+    "lastHealthCheck": 1764246080035,
+    "healthy": true,
+    "pid": 20540
+  }
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "fa19d8c9-228a-44be-a5e7-71b136fe636a",
+    "email": "admin@microservices.com",
+    "username": "admin",
+    "password": "$2a$12$VNb/DI9j1ktk1Lkxrs1ExOyWoSxYSZTmGTI7pndI.gcw/g1rzYfWC",
+    "firstName": "Administrador",
+    "lastName": "Sistema",
+    "role": "admin",
+    "status": "active",
+    "createdAt": "2025-11-27T11:50:51.109Z",
+    "updatedAt": "2025-11-27T11:50:51.111Z"
+  }
+]
