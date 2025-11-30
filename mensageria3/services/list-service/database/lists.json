@@ -167,5 +167,50 @@
     },
     "createdAt": "2025-11-29T12:21:43.266Z",
     "updatedAt": "2025-11-29T12:21:43.297Z"
+  },
+  {
+    "id": "79ed3116-16c2-49ad-a97f-ef8d286ca401",
+    "userId": "fa19d8c9-228a-44be-a5e7-71b136fe636a",
+    "name": "Arroz",
+    "description": "",
+    "status": "active",
+    "items": [],
+    "summary": {
+      "totalItems": 0,
+      "purchasedItems": 0,
+      "estimatedTotal": 0
+    },
+    "createdAt": "2025-11-30T17:01:36.033Z",
+    "updatedAt": "2025-11-30T17:01:36.035Z"
+  },
+  {
+    "id": "d4470461-1fbd-40b2-8c99-2ebbce630427",
+    "userId": "fa19d8c9-228a-44be-a5e7-71b136fe636a",
+    "name": "feijao",
+    "description": "",
+    "status": "active",
+    "items": [],
+    "summary": {
+      "totalItems": 0,
+      "purchasedItems": 0,
+      "estimatedTotal": 0
+    },
+    "createdAt": "2025-11-30T17:01:36.164Z",
+    "updatedAt": "2025-11-30T17:01:36.165Z"
+  },
+  {
+    "id": "56c57928-97d3-422d-b755-932efb84b80c",
+    "userId": "fa19d8c9-228a-44be-a5e7-71b136fe636a",
+    "name": "peixe",
+    "description": "",
+    "status": "active",
+    "items": [],
+    "summary": {
+      "totalItems": 0,
+      "purchasedItems": 0,
+      "estimatedTotal": 0
+    },
+    "createdAt": "2025-11-30T17:02:07.976Z",
+    "updatedAt": "2025-11-30T17:02:07.978Z"
   }
 ]

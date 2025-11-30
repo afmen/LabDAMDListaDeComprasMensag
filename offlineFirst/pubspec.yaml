@@ -1,4 +1,4 @@
-name: task_manager_offline
+name: offlineFirst
 description: Sistema de gerenciamento de tarefas com suporte offline-first
 version: 1.0.0+1
 
