@@ -7,9 +7,40 @@
       "/health",
       "/lists"
     ],
-    "registeredAt": 1764507730549,
-    "lastHealthCheck": 1764507735105,
+    "registeredAt": 1764512975942,
+    "lastHealthCheck": 1764513005946,
     "healthy": true,
-    "pid": 23004
+    "pid": 21452
+  },
+  "item-service": {
+    "url": "http://localhost:3003",
+    "version": "1.0.0",
+    "database": "JSON-NoSQL",
+    "endpoints": [
+      "/health",
+      "/items",
+      "/categories",
+      "/search"
+    ],
+    "registeredAt": 1764512975094,
+    "lastHealthCheck": 1764513005642,
+    "healthy": true,
+    "pid": 15848
+  },
+  "user-service": {
+    "url": "http://localhost:3001",
+    "version": "1.0.0",
+    "database": "JSON-NoSQL",
+    "endpoints": [
+      "/health",
+      "/auth/register",
+      "/auth/login",
+      "/users",
+      "/search"
+    ],
+    "registeredAt": 1764512975231,
+    "lastHealthCheck": 1764513005655,
+    "healthy": true,
+    "pid": 5172
   }
 }

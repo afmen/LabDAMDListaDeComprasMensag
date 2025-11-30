@@ -1,137 +1,54 @@
 import 'package:flutter/foundation.dart';
-import '../models/task.dart';
+import '../models/shopping_list.dart';
 import '../services/database_service.dart';
 import '../services/sync_service.dart';
+import '../services/connectivity_service.dart';
 
-/// Provider para gerenciamento de estado de tarefas
-class TaskProvider with ChangeNotifier {
+class ListProvider with ChangeNotifier {
   final DatabaseService _db = DatabaseService.instance;
-  final SyncService _syncService;
+  final SyncService _syncService = SyncService();
+  final ConnectivityService _connectivity = ConnectivityService.instance;
 
-  List<Task> _tasks = [];
-  bool _isLoading = false;
-  String? _error;
+  List<ShoppingList> _lists = [];
+  bool get isOnline => _connectivity.isOnline;
 
-  TaskProvider({String userId = 'user1'})
-      : _syncService = SyncService(userId: userId);
+  List<ShoppingList> get lists => _lists;
 
-  // Getters
-  List<Task> get tasks => _tasks;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-  
-  List<Task> get completedTasks =>
-      _tasks.where((task) => task.completed).toList();
-  
-  List<Task> get pendingTasks =>
-      _tasks.where((task) => !task.completed).toList();
-  
-  List<Task> get unsyncedTasks =>
-      _tasks.where((task) => task.syncStatus == SyncStatus.pending).toList();
-
-  // ==================== INICIALIZAÇÃO ====================
-
-  Future<void> initialize() async {
-    await loadTasks();
+  void initialize() {
+    loadLists();
     
-    // Iniciar auto-sync
-    _syncService.startAutoSync();
-    
-    // Escutar eventos de sincronização
-    _syncService.syncStatusStream.listen((event) {
-      if (event.type == SyncEventType.completed) {
-        loadTasks(); // Recarregar tarefas após sync
+    // Escutar conectividade para auto-sync
+    _connectivity.connectivityStream.listen((online) {
+      notifyListeners();
+      if (online) {
+        _syncService.sync().then((_) => loadLists());
       }
     });
   }
 
-  // ==================== OPERAÇÕES DE TAREFAS ====================
-
-  /// Carregar todas as tarefas
-  Future<void> loadTasks() async {
-    try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
-      _tasks = await _db.getAllTasks();
-      
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-    }
+  Future<void> loadLists() async {
+    _lists = await _db.getAllLists();
+    notifyListeners();
   }
 
-  /// Criar nova tarefa
-  Future<void> createTask({
-    required String title,
-    required String description,
-    String priority = 'medium',
-  }) async {
-    try {
-      final task = Task(
-        title: title,
-        description: description,
-        priority: priority,
-      );
-
-      await _syncService.createTask(task);
-      await loadTasks();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
+  Future<void> addList(String name, String description) async {
+    final list = ShoppingList(name: name, description: description);
+    await _syncService.createList(list);
+    await loadLists();
   }
 
-  /// Atualizar tarefa
-  Future<void> updateTask(Task task) async {
-    try {
-      await _syncService.updateTask(task);
-      await loadTasks();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
+  Future<void> updateList(ShoppingList list) async {
+    await _syncService.updateList(list);
+    await loadLists();
   }
 
-  /// Alternar status de conclusão
-  Future<void> toggleCompleted(Task task) async {
-    await updateTask(task.copyWith(completed: !task.completed));
+  Future<void> deleteList(String id) async {
+    await _syncService.deleteList(id);
+    await loadLists();
   }
 
-  /// Deletar tarefa
-  Future<void> deleteTask(String taskId) async {
-    try {
-      await _syncService.deleteTask(taskId);
-      await loadTasks();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  // ==================== SINCRONIZAÇÃO ====================
-
-  /// Sincronizar manualmente
-  Future<SyncResult> sync() async {
-    final result = await _syncService.sync();
-    await loadTasks();
-    return result;
-  }
-
-  /// Obter estatísticas de sincronização
-  Future<SyncStats> getSyncStats() async {
-    return await _syncService.getStats();
-  }
-
-  // ==================== LIMPEZA ====================
-
-  @override
-  void dispose() {
-    _syncService.dispose();
-    super.dispose();
+  Future<void> manualSync() async {
+    await _syncService.sync();
+    await loadLists();
   }
 }

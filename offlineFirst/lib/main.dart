@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'providers/task_provider.dart';
+import 'providers/list_provider.dart';
 import 'screens/home_screen.dart';
+import 'services/connectivity_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ConnectivityService.instance.initialize(); // Inicia monitoramento de rede
 
   runApp(const MyApp());
 }
@@ -15,20 +17,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => TaskProvider()..initialize(),
+      create: (_) => ListProvider()..initialize(),
       child: MaterialApp(
-        title: 'Task Manager Offline-First',
+        title: 'Lista de Compras Offline',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          primarySwatch: Colors.green,
           useMaterial3: true,
-          cardTheme: CardThemeData(
-            // <-- Corrigido aqui
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
         ),
         home: const HomeScreen(),
       ),
