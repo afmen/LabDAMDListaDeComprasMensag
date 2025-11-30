@@ -1,0 +1,39 @@
+name: task_manager_offline
+description: Sistema de gerenciamento de tarefas com suporte offline-first
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Persistência local
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  
+  # Conectividade
+  connectivity_plus: ^7.0.0
+  
+  # HTTP
+  http: ^1.1.0
+  
+  # Gerenciamento de estado
+  provider: ^6.1.0
+  
+  # Utilities
+  uuid: ^4.0.0
+  intl: ^0.20.2
+  shared_preferences: ^2.2.2
+  
+  # UI
+  flutter_slidable: ^4.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
