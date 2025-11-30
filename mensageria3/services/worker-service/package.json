@@ -1,0 +1,27 @@
+{
+  "name": "worker-service",
+  "version": "1.0.0",
+  "description": "Worker assíncrono para processamento de eventos do sistema de compras",
+  "main": "worker.js",
+  "scripts": {
+    "start": "node worker.js",
+    "dev": "nodemon worker.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "microservice",
+    "worker",
+    "rabbitmq",
+    "background-job",
+    "async"
+  ],
+  "author": "Aluno PUC Minas",
+  "license": "MIT",
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}

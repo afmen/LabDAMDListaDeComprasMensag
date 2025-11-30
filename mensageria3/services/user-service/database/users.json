@@ -1,0 +1,46 @@
+[
+  {
+    "id": "fa19d8c9-228a-44be-a5e7-71b136fe636a",
+    "email": "admin@microservices.com",
+    "username": "admin",
+    "password": "$2a$12$VNb/DI9j1ktk1Lkxrs1ExOyWoSxYSZTmGTI7pndI.gcw/g1rzYfWC",
+    "firstName": "Administrador",
+    "lastName": "Sistema",
+    "role": "admin",
+    "status": "active",
+    "createdAt": "2025-11-27T11:50:51.109Z",
+    "updatedAt": "2025-11-27T11:50:51.111Z"
+  },
+  {
+    "id": "e2551e39-ebf0-4ad0-af6e-b656cbbffff5",
+    "email": "usuario1764418735827@demo.com",
+    "username": "user1764418735827",
+    "password": "$2a$12$fOxtOM9CGurqfe4t6hFJDu5n7pGj5ooshZbdA.IV/9k1X9K94XOHK",
+    "firstName": "Demo",
+    "lastName": "User",
+    "role": "user",
+    "status": "active",
+    "preferences": {
+      "defaultStore": "Principal",
+      "currency": "BRL"
+    },
+    "createdAt": "2025-11-29T12:18:56.359Z",
+    "updatedAt": "2025-11-29T12:18:56.369Z"
+  },
+  {
+    "id": "0d280a7f-5453-4ff7-aa62-4166e3340eb6",
+    "email": "usuario1764418898375@demo.com",
+    "username": "user1764418898375",
+    "password": "$2a$12$JaS1QgAoxAzGcN4Y88/TzeQS8aLZFgzavcq26XOWmYgBpAHqO9OX.",
+    "firstName": "Demo",
+    "lastName": "User",
+    "role": "user",
+    "status": "active",
+    "preferences": {
+      "defaultStore": "Principal",
+      "currency": "BRL"
+    },
+    "createdAt": "2025-11-29T12:21:39.024Z",
+    "updatedAt": "2025-11-29T12:21:39.025Z"
+  }
+]

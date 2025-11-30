@@ -9,38 +9,9 @@
       "/categories",
       "/search"
     ],
-    "registeredAt": 1764418477023,
-    "lastHealthCheck": 1764419066324,
+    "registeredAt": 1764506484888,
+    "lastHealthCheck": 1764506492790,
     "healthy": true,
-    "pid": 20516
-  },
-  "list-service": {
-    "url": "http://localhost:3002",
-    "version": "1.0.0",
-    "database": "JSON-NoSQL",
-    "endpoints": [
-      "/health",
-      "/lists"
-    ],
-    "registeredAt": 1764418489795,
-    "lastHealthCheck": 1764419066332,
-    "healthy": true,
-    "pid": 9616
-  },
-  "user-service": {
-    "url": "http://localhost:3001",
-    "version": "1.0.0",
-    "database": "JSON-NoSQL",
-    "endpoints": [
-      "/health",
-      "/auth/register",
-      "/auth/login",
-      "/users",
-      "/search"
-    ],
-    "registeredAt": 1764418721759,
-    "lastHealthCheck": 1764419066341,
-    "healthy": true,
-    "pid": 11284
+    "pid": 11992
   }
 }

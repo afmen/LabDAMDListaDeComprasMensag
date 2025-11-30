@@ -1,0 +1,15 @@
+{
+  "list-service": {
+    "url": "http://localhost:3002",
+    "version": "1.0.0",
+    "database": "JSON-NoSQL",
+    "endpoints": [
+      "/health",
+      "/lists"
+    ],
+    "registeredAt": 1764507730549,
+    "lastHealthCheck": 1764507735105,
+    "healthy": true,
+    "pid": 23004
+  }
+}
