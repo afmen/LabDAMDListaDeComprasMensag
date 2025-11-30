@@ -11,7 +11,7 @@ class DatabaseService {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('shopping_offline.db');
+    _database = await _initDB('shopping_offline_v2.db'); // Mudamos o nome para forçar recriação limpa
     return _database!;
   }
 
@@ -41,7 +41,7 @@ class DatabaseService {
       CREATE TABLE sync_queue (
         id TEXT PRIMARY KEY,
         type TEXT NOT NULL,
-        taskId TEXT NOT NULL, -- Mantivemos o nome da coluna para compatibilidade com o SyncOperation existente
+        taskId TEXT NOT NULL,
         data TEXT NOT NULL,
         timestamp INTEGER NOT NULL,
         retries INTEGER NOT NULL DEFAULT 0,
@@ -52,8 +52,6 @@ class DatabaseService {
 
     await db.execute('CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
   }
-
-  // --- Operações de Lista ---
 
   Future<ShoppingList> upsertList(ShoppingList list) async {
     final db = await database;
@@ -82,8 +80,6 @@ class DatabaseService {
     final db = await database;
     await db.delete('shopping_lists', where: 'id = ?', whereArgs: [id]);
   }
-
-  // --- Fila de Sincronização ---
 
   Future<void> addToSyncQueue(SyncOperation operation) async {
     final db = await database;

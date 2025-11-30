@@ -12,23 +12,18 @@ class SyncService {
   
   bool _isSyncing = false;
 
-  // --- Operações Locais (Interceptam a UI) ---
-
   Future<void> createList(ShoppingList list) async {
-    // 1. Salvar localmente (Pendente)
     await _db.upsertList(list.copyWith(
       syncStatus: SyncStatus.pending,
       localUpdatedAt: DateTime.now(),
     ));
 
-    // 2. Fila
     await _db.addToSyncQueue(SyncOperation(
       type: OperationType.create,
-      taskId: list.id, // Usamos taskId para guardar o ID da lista
+      taskId: list.id,
       data: list.toJson(),
     ));
 
-    // 3. Tentar Sync
     if (_connectivity.isOnline) sync();
   }
 
@@ -48,8 +43,7 @@ class SyncService {
   }
 
   Future<void> deleteList(String id) async {
-    await _db.deleteList(id); // Soft delete seria melhor, mas hard delete para demo
-    
+    await _db.deleteList(id);
     await _db.addToSyncQueue(SyncOperation(
       type: OperationType.delete,
       taskId: id,
@@ -59,15 +53,13 @@ class SyncService {
     if (_connectivity.isOnline) sync();
   }
 
-  // --- Engine de Sincronização ---
-
   Future<void> sync() async {
     if (_isSyncing || !_connectivity.isOnline) return;
     _isSyncing = true;
     print('🔄 Sync Iniciado...');
 
     try {
-      // 1. Push (Enviar pendências)
+      // 1. Push
       final pendingOps = await _db.getPendingSyncOperations();
       for (final op in pendingOps) {
         try {
@@ -92,17 +84,13 @@ class SyncService {
         }
       }
 
-      // 2. Pull (Buscar novidades e resolver conflitos LWW)
+      // 2. Pull
       try {
         final serverLists = await _api.getLists();
         for (final serverList in serverLists) {
           final localList = await _db.getList(serverList.id);
 
-          if (localList == null) {
-            // Novo no servidor
-            await _db.upsertList(serverList.copyWith(syncStatus: SyncStatus.synced));
-          } else if (localList.syncStatus == SyncStatus.synced) {
-            // Atualização limpa
+          if (localList == null || localList.syncStatus == SyncStatus.synced) {
             await _db.upsertList(serverList.copyWith(syncStatus: SyncStatus.synced));
           } else {
             // CONFLITO LWW
@@ -111,8 +99,7 @@ class SyncService {
 
             if (localTime.isAfter(serverTime)) {
               print('🏆 Conflito: Local venceu (${localList.name})');
-              // Mantém local, força push no próximo ciclo
-              await _api.updateList(localList); // Push forçado
+              await _api.updateList(localList);
               await _db.upsertList(localList.copyWith(syncStatus: SyncStatus.synced));
             } else {
               print('🏆 Conflito: Servidor venceu (${serverList.name})');

@@ -6,7 +6,6 @@ class ApiService {
   // Use 10.0.2.2 para Android Emulator, localhost para iOS
   static const String baseUrl = 'http://10.0.2.2:3000/api'; 
   String? _authToken;
-  String? _userId;
 
   // Autenticação Automática para Demo
   Future<void> authenticate() async {
@@ -15,7 +14,7 @@ class ApiService {
     try {
       print('🔐 Autenticando usuário demo...');
       final response = await http.post(
-        Uri.parse('$baseUrl/users/auth/login'), // Ajuste para a rota correta do Gateway
+        Uri.parse('$baseUrl/users/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'identifier': 'admin@microservices.com',
@@ -26,7 +25,6 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         _authToken = data['data']['token'];
-        _userId = data['data']['user']['id'];
         print('✅ Autenticado! Token obtido.');
       } else {
         print('❌ Falha na autenticação: ${response.body}');
@@ -40,8 +38,6 @@ class ApiService {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer $_authToken',
   };
-
-  // --- CRUD Listas ---
 
   Future<List<ShoppingList>> getLists() async {
     await authenticate();
@@ -68,7 +64,6 @@ class ApiService {
 
     if (response.statusCode == 201) {
       final data = json.decode(response.body);
-      // O backend retorna { success: true, data: { ... } }
       return ShoppingList.fromJson(data['data']);
     }
     throw Exception('Erro ao criar lista: ${response.statusCode}');
@@ -76,8 +71,6 @@ class ApiService {
 
   Future<ShoppingList> updateList(ShoppingList list) async {
     await authenticate();
-    // Nota: O backend List Service não implementa "Version" para conflito optimistic locking nativamente no exemplo anterior,
-    // mas vamos simular o PUT padrão.
     final response = await http.put(
       Uri.parse('$baseUrl/lists/${list.id}'),
       headers: _headers,
@@ -86,7 +79,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return ShoppingList.fromJson(data['data']); // Retorna a versão do servidor
+      return ShoppingList.fromJson(data['data']);
     }
     throw Exception('Erro ao atualizar lista: ${response.statusCode}');
   }

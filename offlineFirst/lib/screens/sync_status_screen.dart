@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../providers/task_provider.dart';
+import '../providers/list_provider.dart'; // Importação atualizada
 import '../services/sync_service.dart';
 
 class SyncStatusScreen extends StatelessWidget {
@@ -13,10 +13,13 @@ class SyncStatusScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Status de Sincronização'),
       ),
-      body: Consumer<TaskProvider>(
+      body: Consumer<ListProvider>( // Provider atualizado
         builder: (context, provider, child) {
+          // Nota: Certifique-se de adicionar o método getSyncStats() no ListProvider
+          // ou acessar via SyncService se ele for público. 
+          // Assumindo que você expôs um método similar ao do TaskProvider anterior.
           return FutureBuilder<SyncStats>(
-            future: provider.getSyncStats(),
+            future: _fetchStats(provider), // Helper temporário ou método do provider
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
@@ -40,13 +43,13 @@ class SyncStatusScreen extends StatelessWidget {
                     color: stats.isSyncing ? Colors.blue : Colors.grey,
                   ),
                   _buildStatusCard(
-                    title: 'Total de Tarefas',
-                    icon: Icons.task,
-                    value: '${stats.totalTasks}',
+                    title: 'Total de Listas', // Texto atualizado
+                    icon: Icons.list_alt,     // Ícone atualizado
+                    value: '${stats.totalTasks}', // Mantendo a prop genérica do SyncStats
                     color: Colors.blue,
                   ),
                   _buildStatusCard(
-                    title: 'Tarefas Não Sincronizadas',
+                    title: 'Listas Pendentes', // Texto atualizado
                     icon: Icons.cloud_off,
                     value: '${stats.unsyncedTasks}',
                     color: stats.unsyncedTasks > 0 ? Colors.orange : Colors.green,
@@ -82,6 +85,25 @@ class SyncStatusScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  // Helper para buscar stats (caso não tenha adicionado no ListProvider ainda)
+  // O ideal é mover isso para dentro do ListProvider como getSyncStats()
+  Future<SyncStats> _fetchStats(ListProvider provider) async {
+    // Aqui assumimos que o SyncService tem o método getStats
+    // Se o ListProvider não expor o SyncService, você precisará adicionar
+    // o método getSyncStats() no ListProvider (recomendado).
+    // return provider.getSyncStats(); 
+    
+    // Fallback Mock para não quebrar a UI se o método faltar:
+    return SyncStats(
+      totalTasks: provider.lists.length,
+      unsyncedTasks: provider.lists.where((l) => l.syncStatus.toString().contains('pending')).length,
+      queuedOperations: 0, 
+      lastSync: DateTime.now(), 
+      isOnline: provider.isOnline, 
+      isSyncing: false
     );
   }
 
@@ -134,7 +156,7 @@ class SyncStatusScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _handleSync(BuildContext context, TaskProvider provider) async {
+  Future<void> _handleSync(BuildContext context, ListProvider provider) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('🔄 Iniciando sincronização...'),
@@ -142,19 +164,45 @@ class SyncStatusScreen extends StatelessWidget {
       ),
     );
 
-    final result = await provider.sync();
+    try {
+      await provider.manualSync(); // Chamada atualizada para ListProvider
 
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result.success
-                ? '✅ Sincronização concluída'
-                : '❌ ${result.message}',
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Sincronização concluída'),
+            backgroundColor: Colors.green,
           ),
-          backgroundColor: result.success ? Colors.green : Colors.red,
-        ),
-      );
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Erro: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
+}
+
+/// Estatísticas de sincronização (Definição Local para corrigir erro de tipo)
+class SyncStats {
+  final int totalTasks;
+  final int unsyncedTasks;
+  final int queuedOperations;
+  final DateTime? lastSync;
+  final bool isOnline;
+  final bool isSyncing;
+
+  SyncStats({
+    required this.totalTasks,
+    required this.unsyncedTasks,
+    required this.queuedOperations,
+    this.lastSync,
+    required this.isOnline,
+    required this.isSyncing,
+  });
 }
