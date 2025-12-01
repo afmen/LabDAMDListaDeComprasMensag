@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../models/shopping_list.dart';
+import '../models/shopping_item.dart';
 import '../services/database_service.dart';
-import '../services/sync_service.dart';
+import '../services/sync_service.dart'; // SyncStats é importado daqui
 import '../services/connectivity_service.dart';
 
 class ListProvider with ChangeNotifier {
@@ -10,14 +11,14 @@ class ListProvider with ChangeNotifier {
   final ConnectivityService _connectivity = ConnectivityService.instance;
 
   List<ShoppingList> _lists = [];
-  bool get isOnline => _connectivity.isOnline;
+  List<ShoppingItem> _currentItems = []; 
 
+  bool get isOnline => _connectivity.isOnline;
   List<ShoppingList> get lists => _lists;
+  List<ShoppingItem> get currentItems => _currentItems;
 
   void initialize() {
     loadLists();
-    
-    // Escutar conectividade para auto-sync
     _connectivity.connectivityStream.listen((online) {
       notifyListeners();
       if (online) {
@@ -47,8 +48,36 @@ class ListProvider with ChangeNotifier {
     await loadLists();
   }
 
+  Future<void> loadItems(String listId) async {
+    _currentItems = await _db.getItemsByList(listId);
+    notifyListeners();
+  }
+
+  Future<void> addItem(String listId, String name, double qty) async {
+    final item = ShoppingItem(listId: listId, name: name, quantity: qty);
+    _currentItems.add(item); 
+    notifyListeners();
+    await _syncService.addItem(item);
+    await loadItems(listId);
+  }
+
+  Future<void> toggleItem(ShoppingItem item) async {
+    final newItem = item.copyWith(purchased: !item.purchased);
+    final index = _currentItems.indexWhere((i) => i.id == item.id);
+    if (index != -1) {
+      _currentItems[index] = newItem;
+      notifyListeners();
+    }
+    await _syncService.updateItem(newItem);
+  }
+
   Future<void> manualSync() async {
     await _syncService.sync();
     await loadLists();
+  }
+
+  // NOVO: Expor estatísticas
+  Future<SyncStats> getSyncStats() async {
+    return await _syncService.getStats();
   }
 }

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Compras - Microsserviços</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel para JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <!-- Ícones (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Configuração da API ---
+        const API_URL = 'http://localhost:3000/api';
+        
+        // Interceptor para adicionar Token
+        axios.interceptors.request.use(config => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+            return config;
+        });
+
+        // --- Componentes ---
+
+        // 1. Tela de Login
+        const LoginScreen = ({ onLogin }) => {
+            const [email, setEmail] = useState('admin@microservices.com');
+            const [password, setPassword] = useState('admin123');
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setError('');
+                try {
+                    // Gateway: /api/users -> User Service
+                    const res = await axios.post(`${API_URL}/users/auth/login`, { identifier: email, password });
+                    if (res.data.success) {
+                        localStorage.setItem('token', res.data.data.token);
+                        localStorage.setItem('user', JSON.stringify(res.data.data.user));
+                        onLogin(res.data.data.user);
+                    }
+                } catch (err) {
+                    setError(err.response?.data?.message || 'Falha ao conectar ao servidor');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gray-100">
+                    <div className="bg-white p-8 rounded-lg shadow-md w-96">
+                        <h2 className="text-2xl font-bold mb-6 text-center text-green-600">Minhas Compras</h2>
+                        {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">{error}</div>}
+                        <form onSubmit={handleSubmit}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-1">Email</label>
+                                <input 
+                                    type="text" 
+                                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                />
+                            </div>
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium mb-1">Password</label>
+                                <input 
+                                    type="password" 
+                                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                />
+                            </div>
+                            <button 
+                                type="submit" 
+                                disabled={loading}
+                                className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700 transition disabled:opacity-50"
+                            >
+                                {loading ? 'A entrar...' : 'Entrar'}
+                            </button>
+                        </form>
+                        <div className="mt-4 text-center text-xs text-gray-500">
+                            Demo: admin@microservices.com / admin123
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 2. Dashboard Component
+        const Dashboard = () => {
+            const [stats, setStats] = useState(null);
+
+            useEffect(() => {
+                const fetchStats = async () => {
+                    try {
+                        const res = await axios.get(`${API_URL}/dashboard`);
+                        if (res.data.success) setStats(res.data.data);
+                    } catch (e) {
+                        console.error("Erro dashboard", e);
+                    }
+                };
+                fetchStats();
+            }, []);
+
+            if (!stats) return <div className="p-4">A carregar dashboard...</div>;
+
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div className="bg-white p-4 rounded shadow border-l-4 border-blue-500">
+                        <h3 className="text-gray-500 text-sm">Arquitetura</h3>
+                        <p className="font-bold text-lg">{stats.architecture}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded shadow border-l-4 border-green-500">
+                        <h3 className="text-gray-500 text-sm">Serviços Ativos</h3>
+                        <div className="flex gap-2 mt-1">
+                            {Object.keys(stats.services_status).map(svc => (
+                                <span key={svc} className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                                    {svc}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="bg-white p-4 rounded shadow border-l-4 border-purple-500">
+                        <h3 className="text-gray-500 text-sm">Base de Dados</h3>
+                        <p className="font-bold text-lg">{stats.database_approach}</p>
+                    </div>
+                </div>
+            );
+        };
+
+        // 3. Modal de Itens
+        const ItemsModal = ({ list, onClose }) => {
+            const [items, setItems] = useState([]); // Itens locais (do List Service)
+            const [newItemName, setNewItemName] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            useEffect(() => {
+                // Carrega os itens que já estão na lista
+                // Nota: A estrutura do List Service guarda os itens dentro do objeto da lista
+                setItems(list.items || []);
+            }, [list]);
+
+            const handleAddItem = async (e) => {
+                e.preventDefault();
+                if (!newItemName) return;
+                setLoading(true);
+
+                try {
+                    // Gateway Routing Fix: /api/lists/lists/:id/items
+                    await axios.post(`${API_URL}/lists/lists/${list.id}/items`, {
+                        itemName: newItemName,
+                        quantity: 1,
+                        estimatedPrice: 0
+                    });
+                    
+                    // Atualização otimista ou re-fetch
+                    setItems([...items, { itemId: Date.now(), itemName: newItemName, quantity: 1, purchased: false }]);
+                    setNewItemName('');
+                } catch (err) {
+                    alert('Erro ao adicionar item');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
+                        <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg">
+                            <h3 className="font-bold text-lg">{list.name}</h3>
+                            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                        </div>
+                        
+                        <div className="p-4 overflow-y-auto flex-1">
+                            {items.length === 0 ? (
+                                <p className="text-center text-gray-400 py-4">Nenhum item na lista</p>
+                            ) : (
+                                <ul className="space-y-2">
+                                    {items.map((item, idx) => (
+                                        <li key={idx} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded border border-gray-100">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-4 h-4 rounded-full border ${item.purchased ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}></div>
+                                                <span className={item.purchased ? 'line-through text-gray-400' : ''}>
+                                                    {item.itemName || item.name}
+                                                </span>
+                                            </div>
+                                            <span className="text-xs text-gray-400">{item.quantity}un</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+
+                        <div className="p-4 border-t bg-gray-50 rounded-b-lg">
+                            <form onSubmit={handleAddItem} className="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    placeholder="Adicionar item (ex: Café)" 
+                                    className="flex-1 p-2 border rounded"
+                                    value={newItemName}
+                                    onChange={e => setNewItemName(e.target.value)}
+                                />
+                                <button 
+                                    type="submit" 
+                                    disabled={loading}
+                                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                    +
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 4. Lista de Compras Component
+        const ShoppingLists = () => {
+            const [lists, setLists] = useState([]);
+            const [selectedList, setSelectedList] = useState(null);
+            const [newListName, setNewListName] = useState('');
+
+            const fetchLists = async () => {
+                try {
+                    const res = await axios.get(`${API_URL}/lists`);
+                    if (res.data.success) {
+                        setLists(res.data.data);
+                    }
+                } catch (e) {
+                    console.error("Erro ao buscar listas", e);
+                }
+            };
+
+            useEffect(() => {
+                fetchLists();
+            }, [selectedList]); // Recarrega ao fechar modal para atualizar contagens
+
+            const createList = async (e) => {
+                e.preventDefault();
+                if (!newListName) return;
+                try {
+                    await axios.post(`${API_URL}/lists`, { name: newListName });
+                    setNewListName('');
+                    fetchLists();
+                } catch (e) {
+                    alert('Erro ao criar lista');
+                }
+            };
+
+            const checkoutList = async (id) => {
+                if(!confirm("Deseja finalizar esta lista e processar o checkout?")) return;
+                try {
+                    // Endpoint assíncrono com RabbitMQ
+                    await axios.post(`${API_URL}/lists/lists/${id}/checkout`);
+                    alert("Checkout iniciado! O processamento ocorrerá em segundo plano.");
+                    fetchLists();
+                } catch(e) {
+                    alert("Erro no checkout: " + (e.response?.data?.message || e.message));
+                }
+            };
+
+            return (
+                <div>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold">Minhas Listas</h2>
+                        <form onSubmit={createList} className="flex gap-2">
+                            <input 
+                                type="text" 
+                                placeholder="Nova Lista..." 
+                                className="p-2 border rounded text-sm"
+                                value={newListName}
+                                onChange={e => setNewListName(e.target.value)}
+                            />
+                            <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
+                                Criar
+                            </button>
+                        </form>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {lists.map(list => (
+                            <div key={list.id} className="bg-white p-5 rounded-lg shadow hover:shadow-md transition border border-gray-100">
+                                <div className="flex justify-between items-start mb-2">
+                                    <h3 className="font-bold text-lg text-gray-800">{list.name}</h3>
+                                    <span className={`px-2 py-1 rounded text-xs ${list.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                        {list.status}
+                                    </span>
+                                </div>
+                                <p className="text-gray-500 text-sm mb-4">{list.description || 'Sem descrição'}</p>
+                                
+                                <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
+                                    <span>{list.items.length} itens</span>
+                                    <span>Est: R$ {list.summary?.estimatedTotal?.toFixed(2) || '0.00'}</span>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => setSelectedList(list)}
+                                        className="flex-1 bg-blue-50 text-blue-600 py-2 rounded hover:bg-blue-100 text-sm font-medium"
+                                    >
+                                        Ver Itens
+                                    </button>
+                                    {list.status === 'active' && (
+                                        <button 
+                                            onClick={() => checkoutList(list.id)}
+                                            className="bg-orange-50 text-orange-600 px-3 py-2 rounded hover:bg-orange-100 text-sm"
+                                            title="Finalizar Compra"
+                                        >
+                                            Checkout
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {selectedList && (
+                        <ItemsModal 
+                            list={selectedList} 
+                            onClose={() => setSelectedList(null)} 
+                        />
+                    )}
+                </div>
+            );
+        };
+
+        // App Principal
+        const App = () => {
+            const [user, setUser] = useState(null);
+
+            useEffect(() => {
+                const savedUser = localStorage.getItem('user');
+                if (savedUser) setUser(JSON.parse(savedUser));
+                lucide.createIcons();
+            }, []);
+
+            useEffect(() => {
+                if (user) lucide.createIcons();
+            });
+
+            const handleLogout = () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                setUser(null);
+            };
+
+            if (!user) return <LoginScreen onLogin={setUser} />;
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    <header className="bg-white shadow-sm sticky top-0 z-10">
+                        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <div className="bg-green-600 p-2 rounded-lg">
+                                    <i data-lucide="shopping-cart" className="text-white w-5 h-5"></i>
+                                </div>
+                                <h1 className="font-bold text-xl text-gray-800">ShoppingMicro</h1>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm text-gray-600">Olá, <b>{user.firstName}</b></span>
+                                <button onClick={handleLogout} className="text-red-500 hover:text-red-700 text-sm font-medium">
+                                    Sair
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
+                        <Dashboard />
+                        <ShoppingLists />
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

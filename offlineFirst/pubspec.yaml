@@ -11,10 +11,11 @@ dependencies:
   
   # Persistência local
   sqflite: ^2.3.0
+  sqflite_common_ffi: ^2.3.0 # Necessário para rodar no Windows/Linux/macOS
   path: ^1.8.3
   
   # Conectividade
-  connectivity_plus: ^7.0.0
+  connectivity_plus: ^6.0.0 # Ajustado para v6 que suporta List<ConnectivityResult>
   
   # HTTP
   http: ^1.1.0
@@ -24,16 +25,16 @@ dependencies:
   
   # Utilities
   uuid: ^4.0.0
-  intl: ^0.20.2
+  intl: ^0.19.0 
   shared_preferences: ^2.2.2
   
   # UI
-  flutter_slidable: ^4.0.3
+  flutter_slidable: ^3.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
