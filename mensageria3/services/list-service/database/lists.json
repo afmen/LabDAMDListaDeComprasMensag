@@ -350,14 +350,25 @@
     "name": "44444",
     "description": "",
     "status": "active",
-    "items": [],
+    "items": [
+      {
+        "itemId": "f6aa0788-e493-4b99-938d-48783f0c412e",
+        "itemName": "Item Desconhecido",
+        "quantity": 1,
+        "unit": "un",
+        "estimatedPrice": 0,
+        "purchased": false,
+        "notes": "",
+        "addedAt": "2025-12-01T00:58:29.933Z"
+      }
+    ],
     "summary": {
-      "totalItems": 0,
+      "totalItems": 1,
       "purchasedItems": 0,
       "estimatedTotal": 0
     },
     "createdAt": "2025-12-01T00:49:40.787Z",
-    "updatedAt": "2025-12-01T00:49:40.788Z"
+    "updatedAt": "2025-12-01T00:58:29.937Z"
   },
   {
     "id": "77c2dece-6e1e-4391-bea8-502b55669d22",
@@ -391,13 +402,104 @@
     "name": "77777",
     "description": "",
     "status": "active",
-    "items": [],
+    "items": [
+      {
+        "itemId": "3d1bf0f9-d47d-46a4-9011-caf7ede8882e",
+        "itemName": "Item Desconhecido",
+        "quantity": 1,
+        "unit": "un",
+        "estimatedPrice": 0,
+        "purchased": false,
+        "notes": "",
+        "addedAt": "2025-12-01T00:56:59.259Z"
+      },
+      {
+        "itemId": "7f32ba79-cb73-4f88-a273-03b02f428f08",
+        "itemName": "Item Desconhecido",
+        "quantity": 1,
+        "unit": "un",
+        "estimatedPrice": 0,
+        "purchased": true,
+        "notes": "",
+        "addedAt": "2025-12-01T00:58:30.167Z"
+      },
+      {
+        "itemId": "45300fc3-8619-4b74-b487-70e2487a9cf3",
+        "itemName": "Item Desconhecido",
+        "quantity": 1,
+        "unit": "un",
+        "estimatedPrice": 0,
+        "purchased": true,
+        "notes": "",
+        "addedAt": "2025-12-01T00:58:30.316Z"
+      },
+      {
+        "itemId": "a94b2549-e705-4e95-8ab6-d0647e9f4579",
+        "itemName": "Item Desconhecido",
+        "quantity": 1,
+        "unit": "un",
+        "estimatedPrice": 0,
+        "purchased": false,
+        "notes": "",
+        "addedAt": "2025-12-01T00:58:53.373Z"
+      },
+      {
+        "itemId": "b81850e4-66b3-438a-94f6-0b1d526229ab",
+        "itemName": "oleo",
+        "quantity": 1,
+        "unit": "un",
+        "estimatedPrice": 0,
+        "purchased": false,
+        "notes": "",
+        "addedAt": "2025-12-01T01:00:17.885Z"
+      },
+      {
+        "itemId": "e67b5358-63e7-45cd-9e00-7d71325bcbb2",
+        "itemName": "ovo",
+        "quantity": 1,
+        "unit": "un",
+        "estimatedPrice": 0,
+        "purchased": false,
+        "notes": "",
+        "addedAt": "2025-12-01T01:22:13.333Z"
+      },
+      {
+        "itemId": "f8524b92-a278-4aed-b7f8-b0ded515119b",
+        "itemName": "ovo",
+        "quantity": 1,
+        "unit": "un",
+        "estimatedPrice": 0,
+        "purchased": false,
+        "notes": "",
+        "addedAt": "2025-12-01T01:22:23.741Z"
+      },
+      {
+        "itemId": "58437f5b-1021-4c88-a084-f847a0474329",
+        "itemName": "sal",
+        "quantity": 1,
+        "unit": "un",
+        "estimatedPrice": 0,
+        "purchased": false,
+        "notes": "",
+        "addedAt": "2025-12-01T01:23:02.704Z"
+      },
+      {
+        "itemId": "cf22cb0f-ce7e-4f80-ac50-1126e2a141ce",
+        "itemName": "Item Desconhecido",
+        "quantity": 2,
+        "unit": "un",
+        "estimatedPrice": 0,
+        "purchased": false,
+        "notes": "",
+        "addedAt": "2025-12-01T01:23:22.767Z"
+      }
+    ],
     "summary": {
-      "totalItems": 0,
-      "purchasedItems": 0,
+      "totalItems": 9,
+      "purchasedItems": 2,
       "estimatedTotal": 0
     },
     "createdAt": "2025-12-01T00:51:31.279Z",
-    "updatedAt": "2025-12-01T00:51:31.280Z"
+    "updatedAt": "2025-12-01T01:23:22.779Z"
   }
 ]
