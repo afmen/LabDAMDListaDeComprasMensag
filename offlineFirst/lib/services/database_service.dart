@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/shopping_list.dart';
-import '../models/shopping_item.dart'; // Importe o novo modelo
+import '../models/shopping_item.dart';
 import '../models/sync_operation.dart';
 
 class DatabaseService {
@@ -12,7 +12,7 @@ class DatabaseService {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('shopping_offline_v3.db'); // Versão nova
+    _database = await _initDB('shopping_offline_v4.db'); // Incrementando versão para forçar recriação limpa
     return _database!;
   }
 
@@ -23,7 +23,6 @@ class DatabaseService {
   }
 
   Future<void> _createDB(Database db, int version) async {
-    // Tabela de Listas
     await db.execute('''
       CREATE TABLE shopping_lists (
         id TEXT PRIMARY KEY,
@@ -38,7 +37,6 @@ class DatabaseService {
       )
     ''');
 
-    // NOVA: Tabela de Itens
     await db.execute('''
       CREATE TABLE shopping_items (
         id TEXT PRIMARY KEY,
@@ -55,12 +53,11 @@ class DatabaseService {
       )
     ''');
 
-    // Fila de Sync
     await db.execute('''
       CREATE TABLE sync_queue (
         id TEXT PRIMARY KEY,
         type TEXT NOT NULL,
-        taskId TEXT NOT NULL, -- ID do objeto (Lista ou Item)
+        taskId TEXT NOT NULL,
         data TEXT NOT NULL,
         timestamp INTEGER NOT NULL,
         retries INTEGER NOT NULL DEFAULT 0,
@@ -72,7 +69,7 @@ class DatabaseService {
     await db.execute('CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
   }
 
-  // --- Métodos de Listas (Mantidos) ---
+  // --- Operações de Listas ---
   Future<ShoppingList> upsertList(ShoppingList list) async {
     final db = await database;
     await db.insert('shopping_lists', list.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
@@ -94,12 +91,36 @@ class DatabaseService {
 
   Future<void> deleteList(String id) async {
     final db = await database;
-    await db.delete('shopping_items', where: 'listId = ?', whereArgs: [id]); // Deletar itens filhos
+    await db.delete('shopping_items', where: 'listId = ?', whereArgs: [id]);
     await db.delete('shopping_lists', where: 'id = ?', whereArgs: [id]);
   }
 
-  // --- NOVOS: Métodos de Itens ---
-  
+  // --- MIGRAÇÃO DE ID (Correção da Duplicação) ---
+  // Troca o ID local temporário pelo ID real do servidor
+  Future<void> migrateListData(String oldLocalId, ShoppingList serverList) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      // 1. Inserir a lista oficial (vinda do servidor)
+      await txn.insert(
+        'shopping_lists', 
+        serverList.copyWith(syncStatus: SyncStatus.synced).toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace
+      );
+
+      // 2. Mover todos os itens da lista antiga para a nova
+      await txn.update(
+        'shopping_items', 
+        {'listId': serverList.id}, 
+        where: 'listId = ?', 
+        whereArgs: [oldLocalId]
+      );
+
+      // 3. Apagar a lista antiga (local)
+      await txn.delete('shopping_lists', where: 'id = ?', whereArgs: [oldLocalId]);
+    });
+  }
+
+  // --- Operações de Itens ---
   Future<ShoppingItem> upsertItem(ShoppingItem item) async {
     final db = await database;
     await db.insert('shopping_items', item.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
@@ -124,7 +145,7 @@ class DatabaseService {
     await db.delete('shopping_items', where: 'id = ?', whereArgs: [id]);
   }
 
-  // --- Métodos de Sync (Genéricos) ---
+  // --- Fila e Metadata ---
   Future<void> addToSyncQueue(SyncOperation operation) async {
     final db = await database;
     await db.insert('sync_queue', operation.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
@@ -151,5 +172,18 @@ class DatabaseService {
     final maps = await db.query('metadata', where: 'key = ?', whereArgs: [key]);
     if (maps.isEmpty) return null;
     return maps.first['value'] as String;
+  }
+
+  Future<Map<String, int>> getStats() async {
+    final db = await database;
+    final totalLists = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM shopping_lists')) ?? 0;
+    final unsyncedLists = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM shopping_lists WHERE syncStatus = ?', [SyncStatus.pending.toString()])) ?? 0;
+    final queuedOps = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM sync_queue WHERE status = ?', [SyncOperationStatus.pending.toString()])) ?? 0;
+
+    return {
+      'totalLists': totalLists,
+      'unsyncedLists': unsyncedLists,
+      'queuedOperations': queuedOps,
+    };
   }
 }

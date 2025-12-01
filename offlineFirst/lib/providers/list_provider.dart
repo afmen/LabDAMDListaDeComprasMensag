@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../models/shopping_list.dart';
-import '../models/shopping_item.dart'; // Importação normal, sem conflitos
+import '../models/shopping_item.dart';
 import '../services/database_service.dart';
-import '../services/sync_service.dart';
+import '../services/sync_service.dart'; // SyncStats é importado daqui
 import '../services/connectivity_service.dart';
 
 class ListProvider with ChangeNotifier {
@@ -11,7 +11,7 @@ class ListProvider with ChangeNotifier {
   final ConnectivityService _connectivity = ConnectivityService.instance;
 
   List<ShoppingList> _lists = [];
-  List<ShoppingItem> _currentItems = [];
+  List<ShoppingItem> _currentItems = []; 
 
   bool get isOnline => _connectivity.isOnline;
   List<ShoppingList> get lists => _lists;
@@ -19,7 +19,6 @@ class ListProvider with ChangeNotifier {
 
   void initialize() {
     loadLists();
-    
     _connectivity.connectivityStream.listen((online) {
       notifyListeners();
       if (online) {
@@ -32,8 +31,6 @@ class ListProvider with ChangeNotifier {
     _lists = await _db.getAllLists();
     notifyListeners();
   }
-
-  // --- Operações de Lista ---
 
   Future<void> addList(String name, String description) async {
     final list = ShoppingList(name: name, description: description);
@@ -51,8 +48,6 @@ class ListProvider with ChangeNotifier {
     await loadLists();
   }
 
-  // --- Operações de Itens ---
-  
   Future<void> loadItems(String listId) async {
     _currentItems = await _db.getItemsByList(listId);
     notifyListeners();
@@ -60,28 +55,29 @@ class ListProvider with ChangeNotifier {
 
   Future<void> addItem(String listId, String name, double qty) async {
     final item = ShoppingItem(listId: listId, name: name, quantity: qty);
-    
     _currentItems.add(item); 
     notifyListeners();
-
     await _syncService.addItem(item);
     await loadItems(listId);
   }
 
   Future<void> toggleItem(ShoppingItem item) async {
     final newItem = item.copyWith(purchased: !item.purchased);
-    
     final index = _currentItems.indexWhere((i) => i.id == item.id);
     if (index != -1) {
       _currentItems[index] = newItem;
       notifyListeners();
     }
-
     await _syncService.updateItem(newItem);
   }
 
   Future<void> manualSync() async {
     await _syncService.sync();
     await loadLists();
+  }
+
+  // NOVO: Expor estatísticas
+  Future<SyncStats> getSyncStats() async {
+    return await _syncService.getStats();
   }
 }

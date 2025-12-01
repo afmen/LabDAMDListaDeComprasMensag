@@ -13,8 +13,6 @@ class ItemsScreen extends StatefulWidget {
 }
 
 class _ItemsScreenState extends State<ItemsScreen> {
-  final _itemController = TextEditingController();
-
   @override
   void initState() {
     super.initState();
@@ -24,77 +22,135 @@ class _ItemsScreenState extends State<ItemsScreen> {
     );
   }
 
+  void _showAddItemDialog(BuildContext context) {
+    final nameController = TextEditingController();
+    final qtyController = TextEditingController(text: '1');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Adicionar Produto'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Nome do produto (ex: Leite)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: qtyController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Quantidade',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (nameController.text.isNotEmpty) {
+                final qty = double.tryParse(qtyController.text) ?? 1.0;
+                context.read<ListProvider>().addItem(
+                  widget.list.id, 
+                  nameController.text, 
+                  qty
+                );
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Adicionar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.list.name)),
-      body: Column(
-        children: [
-          // Campo de Adicionar Rápido
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _itemController,
-                    decoration: const InputDecoration(
-                      hintText: 'Adicionar produto (ex: Leite)',
-                      border: OutlineInputBorder(),
+      appBar: AppBar(
+        title: Text(widget.list.name),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => context.read<ListProvider>().loadItems(widget.list.id),
+          )
+        ],
+      ),
+      body: Consumer<ListProvider>(
+        builder: (context, provider, child) {
+          final items = provider.currentItems;
+          
+          if (items.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.shopping_basket_outlined, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  const Text('Nenhum item na lista'),
+                  const Text('Toque no + para adicionar'),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            itemCount: items.length,
+            padding: const EdgeInsets.only(bottom: 80), // Espaço para o FAB
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: ListTile(
+                  leading: Checkbox(
+                    value: item.purchased,
+                    onChanged: (_) => provider.toggleItem(item),
+                  ),
+                  title: Text(
+                    item.name,
+                    style: TextStyle(
+                      decoration: item.purchased ? TextDecoration.lineThrough : null,
+                      color: item.purchased ? Colors.grey : null,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send, color: Colors.blue),
-                  onPressed: () {
-                    if (_itemController.text.isNotEmpty) {
-                      context.read<ListProvider>().addItem(
-                        widget.list.id, 
-                        _itemController.text, 
-                        1.0
-                      );
-                      _itemController.clear();
-                    }
-                  },
-                )
-              ],
-            ),
-          ),
-          
-          // Lista de Itens
-          Expanded(
-            child: Consumer<ListProvider>(
-              builder: (context, provider, child) {
-                final items = provider.currentItems;
-                if (items.isEmpty) return const Center(child: Text('Lista vazia'));
-
-                return ListView.builder(
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return ListTile(
-                      leading: Checkbox(
-                        value: item.purchased,
-                        onChanged: (_) => provider.toggleItem(item),
-                      ),
-                      title: Text(
-                        item.name,
-                        style: TextStyle(
-                          decoration: item.purchased ? TextDecoration.lineThrough : null,
-                          color: item.purchased ? Colors.grey : null,
+                  subtitle: Text(
+                    'Qtd: ${item.quantity} ${item.unit}',
+                    style: TextStyle(
+                      color: item.purchased ? Colors.grey : null,
+                    ),
+                  ),
+                  trailing: item.syncStatus.toString().contains('pending')
+                      ? const Tooltip(
+                          message: 'Aguardando envio...',
+                          child: Icon(Icons.cloud_upload, size: 20, color: Colors.orange),
+                        )
+                      : const Tooltip(
+                          message: 'Sincronizado',
+                          child: Icon(Icons.check_circle, size: 20, color: Colors.green),
                         ),
-                      ),
-                      subtitle: Text('${item.quantity} ${item.unit}'),
-                      trailing: item.syncStatus.toString().contains('pending')
-                          ? const Icon(Icons.cloud_upload, size: 16, color: Colors.orange)
-                          : const Icon(Icons.check, size: 16, color: Colors.green),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+      // BOTÃO FLUTUANTE ADICIONADO AQUI
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddItemDialog(context),
+        child: const Icon(Icons.add),
       ),
     );
   }
