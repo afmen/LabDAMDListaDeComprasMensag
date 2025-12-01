@@ -1,7 +1,16 @@
 # LabDAMDMensageria2
 
-npm install
+# Terminal 1
 
-npm run install:all
+cd ./mensageria3
 
 npm start
+
+# Terminal 2
+
+flutter emulator --......
+
+flutter run
+
+
+
